@@ -1,0 +1,312 @@
+API-Sentinel Development Roadmap (30 Days)
+
+Phase 1 (Days 1–5): Foundation & Environment Setup - Understand the project architecture and prepare the development environment.
+
+Day 1 – Understand the Project
+Topics:
+* API Security
+* OWASP API Top 10
+* BOLA
+* Shadow API
+* Zero Trust Architecture
+Read:
+* OWASP API Security Top 10
+* Your project document
+Watch:
+* Hussein Nasser – API Security
+* ByteByteGo – API Gateway
+Deliverable:
+Draw the architecture.
+
+Day 2 – Linux Networking
+Learn:
+* TCP/IP
+* HTTP
+* Linux networking
+* Sockets
+* Kernel vs Userspace
+Practice:
+curl
+netstat
+ss
+tcpdump
+Deliverable:
+Understand how a request reaches the kernel.
+
+Day 3 – Rust Basics
+Learn:
+* Variables
+* Structs
+* Functions
+* Ownership
+* Borrowing
+* Cargo
+
+Day 4 – Rust Advanced
+Learn:
+* Traits
+* Enums
+* Error Handling
+* Modules
+* Collections
+Practice:
+Mini CLI application.
+
+Day 5 – FastAPI
+Create:
+GET /users
+GET /products
+POST /login
+GET /orders/{id}
+Deliverable:
+Running API Server
+
+Phase 2 (Days 6–10): eBPF + Mock Microservice - Capture packets.
+
+Day 6
+Install:
+* LLVM
+* Clang
+* bpftool
+* Aya
+Learn:
+eBPF Architecture
+Read
+Aya Book
+Deliverable
+Aya installed.
+
+Day 7
+Learn:
+* Tracepoints
+* Kprobes
+* Maps
+* Ring Buffer
+Watch:
+eBPF Summit videos
+Practice:
+Run sample Aya project.
+
+Day 8
+Create:
+Mock Ecommerce API
+Endpoints
+/login
+/products
+/orders
+/cart
+/payment
+Generate Swagger automatically.
+
+Day 9
+Write:
+Basic eBPF program
+Capture
+PID
+Source IP
+Destination IP
+Port
+Output
+Console.
+
+Day 10
+
+Capture
+HTTP Traffic
+Export
+JSON
+Deliverable
+Working Packet Monitor.
+
+# Phase 3 (Days 11–15): Traffic Parser - Convert packets into API requests.
+
+Day 11
+Python
+Receive
+JSON
+from Rust.
+Store
+Timestamp
+IP
+Payload
+
+Day 12
+Extract
+GET
+POST
+PUT
+DELETE
+Extract
+Endpoint
+Headers
+Body
+
+Day 13
+Save
+SQLite
+or
+PostgreSQL
+Tables
+Requests
+Endpoints
+Users
+
+Day 14
+Create
+FastAPI Backend
+Endpoints
+GET /traffic
+GET /latest
+GET /stats
+
+Day 15
+Testing
+Use
+Postman
+curl
+Generate
+100 requests.
+Deliverable
+Traffic Database.
+
+# Phase 4 (Days 16–20): Security Analytics - Detect API attacks.
+
+Day 16
+Shadow API Detection
+Compare
+Observed
+vs
+Swagger
+Unknown endpoint
+↓
+Alert
+
+Day 17
+Zombie API Detection
+Deprecated endpoint
+Still active
+↓
+Alert
+
+Day 18
+BOLA Detection
+Store
+UserID
+ObjectID
+Check
+Ownership
+↓
+Alert
+
+### Day 19
+Behavior Analysis
+Implement
+Isolation Forest
+(Optional)
+or
+Simple Rule Engine.
+
+Day 20
+Testing
+Simulate
+User A
+↓
+Access
+User B Order
+Confirm
+Detection.
+Deliverable
+Threat Detection Engine.
+
+# Phase 5 (Days 21–25): React Dashboard - Visualize everything.
+
+Day 21
+Create
+React
+Project.
+Install
+Axios
+Material UI
+Chart.js
+
+Day 22
+Dashboard
+Cards
+Requests
+Alerts
+Users
+Shadow APIs
+
+Day 23
+Tables
+Show
+Method
+Endpoint
+IP
+Time
+
+Day 24
+Threat Page
+Display
+BOLA
+Shadow API
+Zombie API
+
+Day 25
+OWASP Mapping
+Example
+BOLA
+↓
+API1
+Deliverable
+Working Dashboard.
+
+Phase 6 (Days 26–30): Runtime Protection & Finalization - Complete API-Sentinel.
+
+Day 26
+Implement
+Rate Limiting - 100 requests/min
+Block.
+
+Day 27
+PII Masking
+
+Day 28
+Runtime Blocking
+Upgrade
+Observe
+Drop Packet
+
+Day 29
+Performance Testing
+Measure
+Latency
+Target
+
+Day 30
+Documentation
+Prepare:
+* PPT
+* Architecture Diagram
+* Flow Diagram
+* Demo Video
+* GitHub Repository
+* README
+* Testing Report
+
+A Practical Suggestion
+1. Minimum Viable Product (Days 1–15):
+   * Mock API
+   * eBPF event capture
+   * Python parser
+   * Database
+2. Core Security Features (Days 16–25):
+   * Shadow API detection
+   * Zombie API detection
+   * BOLA detection
+   * React dashboard
+3. Advanced Features (Days 26–30):
+   * Rate limiting
+   * PII masking
+   * Runtime blocking (or simulated blocking if kernel enforcement is out of scope)
+   * Performance testing and documentation
