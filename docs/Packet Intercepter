@@ -1,0 +1,49 @@
+#include <linux/bpf.h>
+#include <bpf/bpf_helpers.h>
+#include <linux/if_ether.h>
+#include <linux/ip.h>
+
+struct {
+    __uint(type, BPF_MAP_TYPE_ARRAY);
+    __uint(max_entries, 1);
+    __type(key, __u32);
+    __type(value, __u64);
+} packet_counter SEC(".maps");
+
+SEC("xdp")
+int xdp_packet_intercept(struct xdp_md *ctx)
+{
+    void *data_end = (void *)(long)ctx->data_end;
+    void *data = (void *)(long)ctx->data;
+
+    struct ethhdr *eth = data;
+
+    // Bounds check
+    if ((void *)(eth + 1) > data_end)
+        return XDP_PASS;
+
+    // Count packets
+    __u32 key = 0;
+    __u64 *count = bpf_map_lookup_elem(&packet_counter, &key);
+    if (count)
+        __sync_fetch_and_add(count, 1);
+
+    // Check for IPv4 packets
+    if (eth->h_proto == __constant_htons(ETH_P_IP)) {
+        struct iphdr *ip = (void *)(eth + 1);
+
+        if ((void *)(ip + 1) > data_end)
+            return XDP_PASS;
+
+        // Log source and destination IPs
+        bpf_printk("IPv4 Packet: src=%x dst=%x proto=%d\n",
+                   ip->saddr,
+                   ip->daddr,
+                   ip->protocol);
+    }
+
+    // Allow the packet to continue
+    return XDP_PASS;
+}
+
+char LICENSE[] SEC("license") = "GPL";
