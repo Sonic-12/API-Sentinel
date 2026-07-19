@@ -1,24 +1,50 @@
-# API Sentinel eBPF Debug Notes
+# API Sentinel (eBPF)
 
-Date: 17 July 2026
+## Status
 
-Completed:
-- Aya eBPF template setup
-- TC classifier implementation
-- Kernel loading verification
-- TCX attachment verification
-- NAT VM network testing
+The eBPF module successfully captures outgoing HTTP response payloads from FastAPI/Uvicorn using a kprobe attached to `tcp_sendmsg_locked` and sends them to the Rust userspace through a Ring Buffer. Uses libbpf
 
-Verified:
-- Program visible in bpftool
-- Program attached to enp0s3 ingress
-- Network traffic captured through tcpdump
+### Completed
 
-Current investigation:
-- Aya logger/perf event visibility
-- eBPF map counter reading
-- (THE BOTH API SENTINEL IS FOR EXPERIMENT PART ONLY AND STILL UNDER DEVELOPNMENT)
+- eBPF program loading
+- kprobe attachment
+- Ring Buffer communication
+- HTTP payload extraction
+- Rust userspace integration
+- Tested using FastAPI, curl and Postman
 
-Next:
-- Verify eBPF map updates
-- Test alternative event transport if required
+---
+
+## How to Run
+
+### 1. Start the eBPF loader
+
+```bash
+sudo ./target/debug/api-sentinel-libbpf
+```
+
+### 2. Start the backend
+
+```bash
+cd backend
+source .venv/bin/activate
+uvicorn app.main:app --reload
+```
+
+### 3. Generate traffic
+
+Use Postman or:
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+The Rust terminal should display the captured HTTP payload.
+
+---
+
+## Notes
+
+- The current implementation captures **HTTP response payloads**.
+- Payloads are limited to **256 bytes**.
+- The project is still under active development.
