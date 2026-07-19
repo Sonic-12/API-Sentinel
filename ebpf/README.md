@@ -2,7 +2,7 @@
 
 ## Status
 
-The eBPF module successfully captures outgoing HTTP response payloads from FastAPI/Uvicorn using a kprobe attached to `tcp_sendmsg_locked` and sends them to the Rust userspace through a Ring Buffer. Uses libbpf
+The eBPF module successfully captures outgoing HTTP response payloads from FastAPI/Uvicorn using a kprobe attached to `tcp_sendmsg_locked` and sends them to the Rust userspace through a Ring Buffer using libbpf.
 
 ### Completed
 
@@ -15,23 +15,66 @@ The eBPF module successfully captures outgoing HTTP response payloads from FastA
 
 ---
 
-## How to Run
+# Prerequisites
 
-### 1. Start the eBPF loader
+Install the required packages before building.
+
+## Ubuntu/Debian
+
+```bash
+sudo apt update
+
+# Rust Toolchain
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+
+# Build dependencies
+sudo apt install -y \
+clang \
+llvm \
+libelf-dev \
+libbpf-dev \
+pkg-config \
+build-essential \
+linux-headers-$(uname -r)
+```
+
+Verify installation:
+
+```bash
+cargo --version
+rustc --version
+clang --version
+```
+
+---
+
+# How to Run
+
+## 1. Build the eBPF loader
+
+```bash
+cd ebpf/api-sentinel-libbpf
+cargo build
+```
+
+## 2. Start the eBPF loader
 
 ```bash
 sudo ./target/debug/api-sentinel-libbpf
 ```
 
-### 2. Start the backend
+## 3. Start the backend
+
+Open another terminal.
 
 ```bash
 cd backend
 source .venv/bin/activate
-uvicorn app.main:app --reload
+uvicorn app.main:app
 ```
 
-### 3. Generate traffic
+## 4. Generate traffic
 
 Use Postman or:
 
@@ -43,8 +86,10 @@ The Rust terminal should display the captured HTTP payload.
 
 ---
 
-## Notes
+# Notes
 
-- The current implementation captures **HTTP response payloads**.
-- Payloads are limited to **256 bytes**.
-- The project is still under active development.
+- Captures outgoing HTTP response payloads.
+- Payload size is currently limited to **256 bytes**.
+- Uses **libbpf** and a **Ring Buffer** for kernel-to-userspace communication.
+- Tested on **Ubuntu Linux**.
+- Project is still under active development.
