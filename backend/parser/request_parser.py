@@ -2,10 +2,10 @@ import json
 from dataclasses import asdict
 from os import path
 from wsgiref import headers
-from sample_data import RAW_HTTP_REQUESTS
-from models import ParsedRequest
-from loger import log_request
-from validators import (
+from parser.sample_data import RAW_HTTP_REQUESTS
+from parser.models import ParsedRequest
+from parser.loger import log_request
+from parser.validators import(
     check_http_method,
     check_authorization,
     check_sensitive_path,
@@ -93,5 +93,7 @@ def parse_request(raw_request):
     print(json.dumps(asdict(parsed_request), indent=4))
     if parsed_request.risk_score > 0:
         log_request(parsed_request)
-for request in RAW_HTTP_REQUESTS:
-    parse_request(request)
+
+if __name__ == "__main__":
+    for request in RAW_HTTP_REQUESTS:
+        parse_request(request)
