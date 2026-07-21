@@ -1,6 +1,6 @@
 # API-Sentinel
 
-API-Sentinel is an enterprise-inspired API Security platform designed to monitor, analyze, and secure HTTP/REST API traffic using eBPF and Rust. The project aims to provide real-time API traffic visibility, support behavioral analysis, and lay the foundation for detecting security threats such as Broken Object Level Authorization (BOLA) and Broken Function Level Authorization (BFLA) and Shadow APIs.
+API-Sentinel is an enterprise-inspired API Security platform designed to monitor, analyze, and secure HTTP/REST API traffic using eBPF and Rust. The project provides real-time API traffic visibility by capturing HTTP requests at the kernel level and processing them through a Python-based analysis engine. It serves as a foundation for detecting API security threats such as Broken Object Level Authorization (BOLA), Broken Function Level Authorization (BFLA), and Shadow APIs.
 
 > **Project Status:** Under Development
 
@@ -11,49 +11,56 @@ API-Sentinel is an enterprise-inspired API Security platform designed to monitor
 - Monitor HTTP/REST API traffic at the kernel level using eBPF.
 - Build a mock microservice for API traffic generation.
 - Capture and analyze API requests in real time.
-- Lay the foundation for API behavior analysis and threat detection like BOLA , BFLA and Shadow APIs
+- Build an API Discovery Pipeline for endpoint identification.
+- Lay the foundation for API behavior analysis and threat detection such as BOLA, BFLA, and Shadow APIs.
 - Develop a scalable API security monitoring platform.
 
 ---
 
-## Current Progress
+## Current Development (Week 2)
 
-### Completed
+- Building the API Discovery Pipeline
+- Extracting API endpoint metadata
+- Discovering unique API endpoints
+- Building an API inventory
+- Tracking endpoint usage statistics
+- Preparing normalized API data for behavioural analysis
+- Laying the foundation for Shadow API detection
+
+## Completed (Week 1)
+
 - Project repository initialized
-- FastAPI mock microservice created
-- REST API endpoints implemented
+- FastAPI backend developed
+- Mock REST API endpoints implemented
 - Swagger UI documentation enabled
-- API testing completed using Postman
+- API testing completed using Swagger UI and Postman
+- Rust userspace application integrated with the Python parser
+- HTTP request decoding implemented
+- HTTP request parsing implemented
+- Basic request validation completed
+- Security alert generation implemented
+- Logging mechanism for suspicious requests
 - Ubuntu development environment configured
-- GitHub repository configured
-
-### In Progress
-- Rust development environment setup
-- eBPF project initialization
-
-### Planned
-- Kernel-level HTTP traffic interception
-- Python traffic parser
-- API behavior analysis
-- Shadow API discovery
-- BOLA detection
-- Interactive dashboard
 
 ---
 
 ## Technology Stack
 
 ### Backend
+
 - Python
 - FastAPI
 - Uvicorn
 
 ### Low-Level Development
+
 - Rust
 - eBPF
-- Aya Framework
+- libbpf-rs
+- libbpf-cargo
 
 ### Development Tools
+
 - Ubuntu
 - Git
 - GitHub
@@ -63,80 +70,36 @@ API-Sentinel is an enterprise-inspired API Security platform designed to monitor
 ---
 
 ## Project Structure
+## Project Structure
 
 ```text
 API-Sentinel/
 │
-├── backend/          # FastAPI application
-├── docs/             # Project documentation
-├── ebpf/             # Rust eBPF programs (In Progress)
-├── userspace/        # Rust userspace loader (Planned)
-├── tests/            # Testing modules
+├── backend/        # FastAPI application and Python parser
+├── docs/           # Project documentation
+├── ebpf/           # Rust eBPF programs
+├── tests/          # Testing results
 ├── README.md
+├── PROCEDURE.md
 └── .gitignore
 ```
-
----
-
-## Getting Started
-
-### Clone Repository
-
-```bash
-git clone https://github.com/Sonic-12/API-Sentinel.git
-cd API-Sentinel
-```
-
-### Create Virtual Environment
-
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Run the Backend
-
-```bash
-uvicorn app.main:app
-```
-
-### API Documentation
-
-Open your browser:
-
-```
-http://127.0.0.1:8000/docs
-```
-
 ---
 
 ## Development Workflow
 
-- Feature development is performed on individual branches.
-- Changes are reviewed before merging into the main branch.
-- Every commit represents a meaningful project milestone.
-
----
-
-## Future Roadmap
-
-- Rust eBPF packet interception
-- Python packet parser
-- API traffic reconstruction
-- Shadow API detection
-- BOLA detection
-- Security event dashboard
-- Performance optimization
+- Develop features on separate branches.
+- Test changes before committing.
+- Push updates to GitHub.
+- Merge reviewed changes into the `main` branch.
 
 ---
 
 ## License
 
-This project is being developed as part of the **Axlero Internship Program** for educational and research purposes.
+## License
+
+Copyright © 2026 API-Sentinel.
+
+Developed as part of the **Axlero Internship Program** for educational and research purposes.
+
+This repository is currently intended for learning and research. Licensing terms may be updated as the project evolves.

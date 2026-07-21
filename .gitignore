@@ -5,8 +5,7 @@ node_modules/
 .env
 .vscode/
 .idea/
-
-# eBPF generated files
 *.o
 build.log
 probe.txt
+alerts.log
