@@ -1,18 +1,36 @@
+INVALID_METHOD_RISK = 20
+SENSITIVE_PATH_RISK = 30
+MISSING_AUTH_RISK = 40
+ENUMERATION_RISK = 50
+BOLA_RISK = 60
+
 def check_http_method(method, parsed_request, valid_methods):
 
     if method not in valid_methods:
-        parsed_request.risk_score += 20
+        parsed_request.risk_score += INVALID_METHOD_RISK
         parsed_request.alerts.append(
             f"Invalid HTTP Method: {method}"
         )
 
-def check_authorization(headers, parsed_request):
+def check_authorization(headers, path, parsed_request):
 
-    if "Authorization" not in headers:
-        parsed_request.risk_score += 40
-        parsed_request.alerts.append(
-            "Missing Authorization Header"
-        )
+    protected_paths = [
+        "/admin",
+        "/manage",
+        "/users",
+        "/profile"
+    ]
+
+    for protected_path in protected_paths:
+        if path.startswith(protected_path):
+
+            if "Authorization" not in headers:
+                parsed_request.risk_score += MISSING_AUTH_RISK
+                parsed_request.alerts.append(
+                    "Missing Authorization Header"
+                )
+
+            break
 
 def check_sensitive_path(path, parsed_request):
 
@@ -24,25 +42,21 @@ def check_sensitive_path(path, parsed_request):
         "/manage"
     ]
 
-    for sensitive_path in sensitive_paths:
-        if path.startswith(sensitive_path):
-            parsed_request.alerts.append(
-                f"Accessing sensitive path: {sensitive_path}"
-            )
-            parsed_request.risk_score += 30
-            break
+    if any(path.startswith(p) for p in sensitive_paths):
+        parsed_request.risk_score += SENSITIVE_PATH_RISK
+        parsed_request.alerts.append(
+            "Accessing sensitive path"
+        )
 
 def check_enumeration(path, previous_object_id, parsed_request):
 
     object_id = None
 
     if path.startswith("/users/"):
-        try:
-            object_id = int(path.split("/")[-1])
-        except ValueError:
-            object_id = None
+        user_id = path.split("/")[-1]
 
-    print(f"Object ID: {object_id}")
+        if user_id.isdigit():
+            object_id = int(user_id)
 
     if object_id is not None:
         previous_object_id.append(object_id)
@@ -55,13 +69,12 @@ def check_enumeration(path, previous_object_id, parsed_request):
             last_three[1] == last_three[0] + 1 and
             last_three[2] == last_three[1] + 1
         ):
-            parsed_request.risk_score += 50
+            parsed_request.risk_score += ENUMERATION_RISK
             parsed_request.alerts.append(
                 "Possible User ID Enumeration Detected"
             )
 
     return object_id
-
 def check_bola(
     authorization,
     object_id,
@@ -69,18 +82,22 @@ def check_bola(
     parsed_request
 ):
 
-    if authorization and object_id is not None:
+    if object_id is None:
+        return
 
-        if authorization not in token_access_history:
-            token_access_history[authorization] = []
+    if not authorization:
+        return
 
-        token_access_history[authorization].append(object_id)
+    if authorization not in token_access_history:
+        token_access_history[authorization] = []
 
-        accessed_ids = token_access_history[authorization]
-        unique_ids = set(accessed_ids)
+    token_access_history[authorization].append(object_id)
 
-        if len(unique_ids) >= 3:
-            parsed_request.risk_score += 60
-            parsed_request.alerts.append(
-                "Possible BOLA Attack: Same token accessing multiple object IDs"
-            )
+    accessed_ids = token_access_history[authorization]
+    unique_ids = set(accessed_ids)
+
+    if len(unique_ids) >= 3:
+        parsed_request.risk_score += BOLA_RISK
+        parsed_request.alerts.append(
+            "Possible BOLA Attack: Same token accessing multiple object IDs"
+        )

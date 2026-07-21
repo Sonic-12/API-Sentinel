@@ -7,21 +7,23 @@ use libbpf_rs::{
     skel::{OpenSkel, SkelBuilder},
     RingBufferBuilder,
 };
+use serde_json::json;
 use std::mem::MaybeUninit;
 
-// Event received from the eBPF Ring Buffer.
 #[repr(C)]
 #[derive(Debug)]
 struct Event {
     ts: u64,
+    conn_id: u64, // struct sock* pointer value; a stable per-connection key
     pid: u32,
     len: u32,
+    dir: u8, // 0 = response (outgoing), 1 = request (incoming)
     comm: [u8; 16],
     data: [u8; 256],
 }
 
 fn main() -> Result<()> {
-    println!("Opening BPF skeleton...");
+    eprintln!("Opening BPF skeleton...");
 
     // Create skeleton builder
     let builder = bpf::ApiSentinelSkelBuilder::default();
@@ -33,58 +35,56 @@ fn main() -> Result<()> {
     let open_skel = builder.open(&mut open_object)?;
     let skel = open_skel.load()?;
 
-    println!("BPF loaded successfully!");
+    eprintln!("BPF loaded successfully!");
 
-    // Attach tracepoint
+    // Attach kprobe (responses: tcp_sendmsg_locked)
     let _link = skel.progs.api_sentinel.attach()?;
 
-    println!("kprobe attached!");
+    // Attach kprobe + kretprobe pair (requests: tcp_recvmsg)
+    let _recv_entry_link = skel.progs.api_sentinel_recv_entry.attach()?;
+    let _recv_exit_link = skel.progs.api_sentinel_recv_exit.attach()?;
+
+    eprintln!("kprobes attached!");
 
     // Create Ring Buffer
     let mut rb_builder = RingBufferBuilder::new();
 
-    rb_builder.add(&skel.maps.events, |data| {
+
+    rb_builder.add(&skel.maps.events, move |data| {
         // Ignore malformed events
         if data.len() != std::mem::size_of::<Event>() {
             return 0;
         }
 
         // Convert raw bytes into Event
-        let event = unsafe {
-            &*(data.as_ptr() as *const Event)
-        };
+        let event = unsafe { &*(data.as_ptr() as *const Event) };
 
         // Convert process name to UTF-8
         let comm = String::from_utf8_lossy(&event.comm);
-        let comm = comm.trim_end_matches('\0');
+        let comm = comm.trim_end_matches('\0').to_string();
 
-        println!("\n==============================");
-        println!("Timestamp : {}", event.ts);
-        println!("PID       : {}", event.pid);
-        println!("Process   : {}", comm);
-        println!("Data Len  : {}", event.len);
-
-
-        // Raw Payload (HEX)
         let payload_len = (event.len as usize).min(event.data.len());
         let payload = &event.data[..payload_len];
 
-        println!("Raw Payload (HEX):");
+        let payload_hex = payload
+            .iter()
+            .map(|b| format!("{:02x}", b))
+            .collect::<String>();
 
-        for byte in payload {
-            print!("{:02x} ", byte);
-        }
-        println!();
+        let dir = if event.dir == 1 { "request" } else { "response" };
 
-        // UTF-8 text
-        if let Ok(text) = std::str::from_utf8(payload) {
-            println!("Payload (TEXT):");
-            println!("{}", text);
-        } else {
-            println!("Payload is not valid UTF-8 (likely encrypted/binary).");
-        }
+        let record = json!({
+            "ts_ns": event.ts,
+            "conn_id": event.conn_id,
+            "pid": event.pid,
+            "dir": dir,
+            "comm": comm,
+            "len": event.len,
+            "payload_hex": payload_hex,
+        });
 
-        println!("==============================");
+        // One JSON object per line -> stdout, for the parser to consume.
+        println!("{}", record);
 
         0
     })?;
@@ -92,7 +92,7 @@ fn main() -> Result<()> {
     // Build Ring Buffer
     let ringbuf = rb_builder.build()?;
 
-    println!("Listening for events...\n");
+    eprintln!("Listening for events...\n");
 
     // Poll forever
     loop {

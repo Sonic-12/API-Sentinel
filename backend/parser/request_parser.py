@@ -71,7 +71,7 @@ def parse_request(raw_request):
 )
     
     check_http_method(method, parsed_request, valid_methods)
-    check_authorization(headers, parsed_request)
+    check_authorization(headers, path, parsed_request)
     check_sensitive_path(path, parsed_request)
 
     object_id = check_enumeration(
