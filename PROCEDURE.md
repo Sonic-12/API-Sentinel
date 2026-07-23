@@ -83,18 +83,16 @@ Leave this terminal running.
 Open a new terminal.
 
 ```bash
-cd ~/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf
-
-cargo clean
-
-cargo build
-
+cd ~/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf && \
+cargo clean && \
+cargo build && \
 sudo ./target/debug/api-sentinel-libbpf | \
 (
-cd ../../backend
-source .venv/bin/activate
-python -m parser.integration
+  cd ../../backend
+  source .venv/bin/activate
+  python -m parser.integration | python -m discovery.pipeline
 )
+
 ```
 
 Expected Output
@@ -138,6 +136,22 @@ POST http://127.0.0.1:8000/login
 ```
 
 The captured requests will be displayed by the Python parser running in the second terminal.
+
+---
+
+# Step 4 : Verify Discovery Output
+
+After generating traffic, the Discovery Pipeline automatically produces:
+```
+backend/discovery_report.json
+```
+The report includes:
+
+Automatically generated OpenAPI 3.0 specification
+Discovered API inventory
+Shadow API comparison results
+Endpoint access log
+Risk score and alert metadata
 
 ---
 

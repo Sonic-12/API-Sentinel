@@ -1,11 +1,11 @@
-__pycache__/
-.venv/
-target/
-node_modules/
-.env
 .vscode/
 .idea/
+__pycache__/
+*.pyc
+.venv/
 *.o
+*.tmp
 build.log
 probe.txt
 alerts.log
+discovery_report.json
