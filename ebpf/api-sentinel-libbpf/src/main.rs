@@ -10,16 +10,20 @@ use libbpf_rs::{
 use serde_json::json;
 use std::mem::MaybeUninit;
 
+
+const MAX_CAPTURE_LEN: usize = 4096;
+
 #[repr(C)]
 #[derive(Debug)]
 struct Event {
     ts: u64,
-    conn_id: u64, // struct sock* pointer value; a stable per-connection key
+    conn_id: u64, 
     pid: u32,
-    len: u32,
-    dir: u8, // 0 = response (outgoing), 1 = request (incoming)
+    len: u32,        
+    dir: u8,       
+    truncated: u8,   
     comm: [u8; 16],
-    data: [u8; 256],
+    data: [u8; MAX_CAPTURE_LEN],
 }
 
 fn main() -> Result<()> {
@@ -80,10 +84,11 @@ fn main() -> Result<()> {
             "dir": dir,
             "comm": comm,
             "len": event.len,
+            "truncated": event.truncated == 1,
             "payload_hex": payload_hex,
         });
 
-        // One JSON object per line -> stdout, for the parser to consume.
+        // One JSON object per line TO stdout, for the parser to consume.
         println!("{}", record);
 
         0

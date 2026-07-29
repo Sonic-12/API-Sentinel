@@ -12,35 +12,22 @@ API-Sentinel is an enterprise-inspired API Security platform designed to monitor
 - Build a mock microservice for API traffic generation.
 - Capture and analyze API requests in real time.
 - Build an API Discovery Pipeline for endpoint identification.
-- Lay the foundation for API behavior analysis and threat detection such as BOLA, BFLA, and Shadow APIs.
+- Detect and analyze API security threats such as BOLA, BFLA, and Shadow APIs.
 - Develop a scalable API security monitoring platform.
 
 ---
 
-## Current Development (Week 2)
+## Completed Features
 
-- Building the API Discovery Pipeline
-- Extracting API endpoint metadata
-- Discovering unique API endpoints
-- Building an API inventory
-- Tracking endpoint usage statistics
-- Preparing normalized API data for behavioural analysis
-- Laying the foundation for Shadow API detection
-
-## Completed (Week 1)
-
-- Project repository initialized
-- FastAPI backend developed
-- Mock REST API endpoints implemented
-- Swagger UI documentation enabled
-- API testing completed using Swagger UI and Postman
-- Rust userspace application integrated with the Python parser
-- HTTP request decoding implemented
-- HTTP request parsing implemented
-- Basic request validation completed
-- Security alert generation implemented
-- Logging mechanism for suspicious requests
-- Ubuntu development environment configured
+- FastAPI-based mock REST API developed with Swagger UI support.
+- HTTP request capture implemented using eBPF and Rust.
+- Rust userspace application integrated with the Python analysis pipeline.
+- HTTP request decoding, parsing, and validation completed.
+- API Discovery Pipeline implemented for endpoint discovery and inventory generation.
+- BOLA heuristic engine implemented for anomalous object access detection.
+- Risk score calculation and runtime security alert generation implemented.
+- Discovery reports and security logs generated automatically.
+- API testing and validation completed using Swagger UI and Postman.
 
 ---
 
@@ -70,15 +57,14 @@ API-Sentinel is an enterprise-inspired API Security platform designed to monitor
 ---
 
 ## Project Structure
-## Project Structure
 
 ```text
 API-Sentinel/
 │
-├── backend/        # FastAPI application and Python parser
-├── docs/           # Project documentation
-├── ebpf/           # Rust eBPF programs
-├── tests/          # Testing results
+├── backend/       
+├── docs/          
+├── ebpf/         
+├── tests/          
 ├── README.md
 ├── PROCEDURE.md
 └── .gitignore
@@ -95,10 +81,6 @@ API-Sentinel/
 ---
 
 ## License
-
-## License
-
-Copyright © 2026 API-Sentinel.
 
 Developed as part of the **Axlero Internship Program** for educational and research purposes.
 

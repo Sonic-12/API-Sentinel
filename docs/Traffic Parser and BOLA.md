@@ -68,8 +68,22 @@ These logs provide a persistent record of suspicious API activity that can later
 
 ---
 
+## bola_engine.py
+
+`bola_engine.py` implements the Broken Object Level Authorization (BOLA) heuristic engine.
+
+The engine monitors authenticated users by tracking their Authorization tokens and associates each token with the object IDs it accesses. It establishes a baseline object for every authenticated user and continuously analyzes subsequent requests to identify anomalous access to multiple different object IDs.
+
+When the number of distinct object IDs accessed by the same authenticated user exceeds the configured threshold, the engine generates a BOLA security alert and increases the request risk score. The generated alerts are then propagated to the logging and API discovery modules for further analysis and reporting.
+
+This heuristic provides an efficient mechanism for identifying potential unauthorized object access without requiring prior knowledge of application-specific authorization rules.
+
+---
+
 ## Overall Operation
 
-When an HTTP request is captured by the eBPF program, it is forwarded to the Rust userspace loader, which converts the captured packet into a JSON event. The parser receives this event through `integration.py`, decodes the hexadecimal payload using `decoder.py`, reconstructs the HTTP request using `request_parser.py`, stores the extracted information inside the request model defined in `models.py`, performs security validation through `validators.py`, and finally records any suspicious requests using `loger.py`.
+## Overall Operation
 
-Each module has a single responsibility, making the parser easier to understand, maintain, and extend while keeping the processing workflow clear and modular.
+When an HTTP request is captured by the eBPF program, it is forwarded to the Rust userspace loader, which converts the captured packet into a JSON event. The parser receives this event through `integration.py`, decodes the hexadecimal payload using `decoder.py`, reconstructs the HTTP request using `request_parser.py`, stores the extracted information inside the request model defined in `models.py`, performs request validation through `validators.py`, analyzes object access patterns using `bola_engine.py`, records suspicious requests in `alerts.log` through `loger.py`, and updates the API discovery report through `discovery.pipeline`.
+
+Each module has a single responsibility, making the parser easier to understand, maintain, and extend while keeping the processing workflow clear, modular, and scalable.

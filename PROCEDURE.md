@@ -48,9 +48,7 @@ Verify the installation:
 
 ```bash
 cargo --version
-
 rustc --version
-
 clang --version
 ```
 
@@ -62,9 +60,7 @@ Open a terminal and navigate to the backend directory.
 
 ```bash
 cd ~/Axlero/API-Sentinel/backend
-
 source .venv/bin/activate
-
 uvicorn app.main:app
 ```
 
@@ -110,9 +106,9 @@ Leave this terminal running.
 
 ---
 
-# Step 3: Send a Test Request
+# Step 3: Simulate a BOLA Attack
 
-Once both terminals are running successfully, generate API traffic using either of the following methods:
+Once both terminals are running successfully, generate authenticated API requests using either of the following methods.
 
 ### Option 1: Swagger UI
 
@@ -122,39 +118,57 @@ Open your browser and visit:
 http://127.0.0.1:8000/docs
 ```
 
-Execute any available API endpoint to generate HTTP requests.
+Execute the following requests using the same Authorization token:
+
+```text
+Authorization: Bearer T1 (EXAMPLE)
+
+GET /users/101
+GET /users/102
+GET /users/103
+GET /users/104
+GET /users/105
+```
 
 ### Option 2: Postman
 
-Open Postman and send HTTP requests to your FastAPI server.
+Open Postman and send the same requests to the FastAPI server.
 
 Example:
 
 ```text
-GET http://127.0.0.1:8000/users
-POST http://127.0.0.1:8000/login
+GET http://127.0.0.1:8000/users/101
+GET http://127.0.0.1:8000/users/102
+GET http://127.0.0.1:8000/users/103
+GET http://127.0.0.1:8000/users/104
+GET http://127.0.0.1:8000/users/105
 ```
 
-The captured requests will be displayed by the Python parser running in the second terminal.
+Add the following request header:
+
+```text
+Authorization: Bearer T1 (EXAMPLE)
+```
 
 ---
 
-# Step 4 : Verify Discovery Output
+# Step 4: Verify Detection Output
 
-After generating traffic, the Discovery Pipeline automatically produces:
-```
+After generating traffic, verify the following files:
+
+```text
 backend/discovery_report.json
 ```
-The report includes:
 
-Automatically generated OpenAPI 3.0 specification
-Discovered API inventory
-Shadow API comparison results
-Endpoint access log
-Risk score and alert metadata
+and
+
+```text
+backend/alerts.log
+```
+
+These files contain the generated BOLA alerts, risk scores, and request details.
 
 ---
-
 # Stopping the Application
 
 To stop the FastAPI server and the eBPF pipeline, return to each running terminal and press:

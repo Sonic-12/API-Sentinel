@@ -9,3 +9,4 @@ build.log
 probe.txt
 alerts.log
 discovery_report.json
+.pytest_cache/

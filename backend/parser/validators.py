@@ -75,29 +75,3 @@ def check_enumeration(path, previous_object_id, parsed_request):
             )
 
     return object_id
-def check_bola(
-    authorization,
-    object_id,
-    token_access_history,
-    parsed_request
-):
-
-    if object_id is None:
-        return
-
-    if not authorization:
-        return
-
-    if authorization not in token_access_history:
-        token_access_history[authorization] = []
-
-    token_access_history[authorization].append(object_id)
-
-    accessed_ids = token_access_history[authorization]
-    unique_ids = set(accessed_ids)
-
-    if len(unique_ids) >= 3:
-        parsed_request.risk_score += BOLA_RISK
-        parsed_request.alerts.append(
-            "Possible BOLA Attack: Same token accessing multiple object IDs"
-        )

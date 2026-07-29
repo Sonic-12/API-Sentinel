@@ -74,6 +74,5 @@ The Rust terminal should display the captured raw ebpf data packet.
 # Notes
 
 - Captures HTTP response/request
-- Payload size is currently limited to **256 bytes**.
 - Uses **libbpf** and a **Ring Buffer** for kernel-to-userspace communication.
 - Tested on **Ubuntu Linux**.

@@ -9,11 +9,11 @@ from parser.validators import(
     check_http_method,
     check_authorization,
     check_sensitive_path,
-    check_enumeration,
-    check_bola
+    check_enumeration
 )
+from parser.bola_engine import BolaEngine
 previous_object_id = []
-token_access_history = {}
+bola_engine = BolaEngine()
 def parse_request(raw_request):
     lines = raw_request.strip().splitlines()
     body = ""
@@ -42,7 +42,7 @@ def parse_request(raw_request):
             key, value = parameter.split("=", 1)
             query_parameters[key] = value
     http_version = parts[2]
-#print(f"Method: {method}\nPath: {path}\nHTTP Version: {http_version}")
+
     headers = {}
     for line in lines[1:]:
         if ": " in line:
@@ -57,9 +57,6 @@ def parse_request(raw_request):
         except json.JSONDecodeError:
             pass
     authorization = headers.get("Authorization")
-#print("\nHeaders:")
-#for key, value in headers.items():
-#    print(f"{key}: {value}")
 
     parsed_request = ParsedRequest(
     method=method,
@@ -79,17 +76,12 @@ def parse_request(raw_request):
     previous_object_id,
     parsed_request
     )
-    check_bola(
+    bola_engine.evaluate(
     authorization,
     object_id,
-    token_access_history,
     parsed_request
     )
  
-    #print("History of Object IDs:", previous_object_id)
-    #print("Token Access History:", token_access_history)
-    #print("Query Parameters:", query_parameters)
-    #print(body)
     print(json.dumps(asdict(parsed_request), indent=4))
     if parsed_request.risk_score > 0:
         log_request(parsed_request)
