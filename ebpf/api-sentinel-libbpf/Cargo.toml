@@ -1,0 +1,15 @@
+[package]
+name = "api-sentinel-libbpf"
+version = "0.1.0"
+edition = "2024"
+
+build = "build.rs"
+
+[dependencies]
+libbpf-rs = "0.26"
+libc = "0.2"
+anyhow = "1"
+serde_json = "1"
+
+[build-dependencies]
+libbpf-cargo = "0.26"
