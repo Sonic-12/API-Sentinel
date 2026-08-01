@@ -26,6 +26,7 @@ CFLAGS_x86_64-unknown-linux-gnu = None
 cargo:rerun-if-env-changed=LIBBPF_SYS_EXTRA_CFLAGS
   MKDIR    /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs
   INSTALL  bpf.h libbpf.h btf.h libbpf_common.h libbpf_legacy.h bpf_helpers.h bpf_helper_defs.h bpf_tracing.h bpf_endian.h bpf_core_read.h skel_internal.h libbpf_version.h usdt.bpf.h
+  INSTALL  /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/libbpf.pc
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/bpf.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/btf.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/libbpf.o
@@ -46,7 +47,6 @@ cargo:rerun-if-env-changed=LIBBPF_SYS_EXTRA_CFLAGS
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/elf.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/features.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/btf_iter.o
-  INSTALL  /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/libbpf.pc
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/btf_relocate.o
   AR       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/libbpf.a
   INSTALL  /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/libbpf.a 
