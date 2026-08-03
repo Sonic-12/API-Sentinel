@@ -43,8 +43,7 @@ struct {
     __type(value, struct recv_ctx);
 } recv_bufs SEC(".maps");
 
-/* normalized 4-tuple: either packet direction of a flow hashes to the
- * same key, so one block entry covers both directions */
+
 struct flow_key {
     u32 addr_lo;
     u32 addr_hi;
@@ -71,7 +70,7 @@ static __always_inline void make_flow_key(struct flow_key *k,
     }
 }
 
-SEC("kprobe/tcp_sendmsg_locked")
+SEC("kprobe/tcp_sendmsg_locked") 
 int BPF_KPROBE(api_sentinel, struct sock *sk, struct msghdr *msg, size_t size)
 {
     char comm[16];
@@ -89,9 +88,6 @@ int BPF_KPROBE(api_sentinel, struct sock *sk, struct msghdr *msg, size_t size)
     e->dir = 0;
     e->truncated = 0;
 
-    /* skc_rcv_saddr/skc_daddr are stored network-order in the kernel;
-     * convert to host order here so it matches what the TC program
-     * computes from raw packet bytes via bpf_ntohl(). */
     e->saddr = bpf_ntohl(BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr));
     e->daddr = bpf_ntohl(BPF_CORE_READ(sk, __sk_common.skc_daddr));
     e->sport = BPF_CORE_READ(sk, __sk_common.skc_num);
@@ -119,7 +115,7 @@ int BPF_KPROBE(api_sentinel, struct sock *sk, struct msghdr *msg, size_t size)
     return 0;
 }
 
-SEC("kprobe/tcp_recvmsg")
+SEC("kprobe/tcp_recvmsg") 
 int BPF_KPROBE(api_sentinel_recv_entry, struct sock *sk, struct msghdr *msg, size_t len, int flags)
 {
     char comm[16];
@@ -144,7 +140,7 @@ int BPF_KPROBE(api_sentinel_recv_entry, struct sock *sk, struct msghdr *msg, siz
     return 0;
 }
 
-SEC("kretprobe/tcp_recvmsg")
+SEC("kretprobe/tcp_recvmsg") 
 int BPF_KRETPROBE(api_sentinel_recv_exit, int ret)
 {
     u64 pid_tgid = bpf_get_current_pid_tgid();

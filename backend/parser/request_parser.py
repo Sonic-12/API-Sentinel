@@ -1,6 +1,6 @@
 import json
 from dataclasses import asdict
-from parser.models import ParsedRequest
+from parser.models import ParsedRequest, ip_to_str
 from parser.loger import log_request
 from parser.enforcer import block_flow
 from parser.validators import (
@@ -10,9 +10,11 @@ from parser.validators import (
     check_enumeration
 )
 from parser.bola_engine import BolaEngine
+from parser.rate_limiter import RateLimiter
 
-previous_object_id = []
+previous_object_ids = {}
 bola_engine = BolaEngine()
+rate_limiter = RateLimiter()
 
 
 def parse_request(raw_request, conn_id=None, saddr=None, daddr=None, sport=None, dport=None):
@@ -59,20 +61,29 @@ def parse_request(raw_request, conn_id=None, saddr=None, daddr=None, sport=None,
         query_parameters=query_parameters,
         http_version=http_version,
         headers=headers,
-        body=body
+        body=body,
+        conn_id=conn_id,
+        client_ip=ip_to_str(saddr),
+        server_ip=ip_to_str(daddr),
+        sport=sport,
+        dport=dport
     )
 
     check_http_method(method, parsed_request, valid_methods)
     check_authorization(headers, path, parsed_request)
     check_sensitive_path(path, parsed_request)
 
-    object_id = check_enumeration(path, previous_object_id, parsed_request)
+    # identity for tracking, falls back to ip when there is no token
+    identity = authorization or parsed_request.client_ip or "unknown"
+
+    object_id = check_enumeration(path, identity, previous_object_ids, parsed_request)
     bola_engine.evaluate(authorization, object_id, parsed_request)
+    rate_limiter.evaluate(authorization, path, parsed_request)
 
     print(json.dumps(asdict(parsed_request), indent=4))
 
     if parsed_request.risk_score > 0:
         log_request(parsed_request)
 
-    if parsed_request.risk_score >= 60:  # BOLA_RISK_BASE threshold -> enforce
+    if parsed_request.risk_score >= 60:  # BOLA_RISK_BASE threshold to enforce
         block_flow(saddr, daddr, sport, dport)
