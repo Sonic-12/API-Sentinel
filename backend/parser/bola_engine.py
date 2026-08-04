@@ -26,7 +26,7 @@ class BolaEngine:
         self.ttl_seconds = ttl_seconds
         self.max_tokens = max_tokens
         self._clock = clock
-        # token -> {"owner_id": obj, "seen": set(), "recent": deque, "last_seen": ts}
+        # token as {"owner_id": obj, "seen": set(), "recent": deque, "last_seen": ts}
         self._history = OrderedDict()
 
     def _evict_stale(self, now):

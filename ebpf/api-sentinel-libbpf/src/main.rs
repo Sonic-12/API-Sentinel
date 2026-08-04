@@ -68,9 +68,6 @@ fn make_flow_key_bytes(a1: u32, a2: u32, p1: u16, p2: u16) -> [u8; 12] {
     buf
 }
 
-// Suppresses the benign "Exclusivity flag on, cannot modify" libbpf log
-// line, which is printed by the C library itself during create() -- before
-// any Result reaches Rust, so it can't be caught via error handling alone.
 fn install_print_filter() {
     set_print(Some((PrintLevel::Warn, |level, msg| {
         if msg.contains("Exclusivity flag on, cannot modify") {
@@ -123,18 +120,14 @@ fn handle_control_conn(stream: UnixStream, blocklist: Arc<MapHandle>) {
 
 fn main() -> Result<()> {
     install_print_filter();
-    eprintln!("Opening BPF skeleton...");
 
     let builder = bpf::ApiSentinelSkelBuilder::default();
     let mut open_object = MaybeUninit::uninit();
     let mut skel = builder.open(&mut open_object)?.load()?;
 
-    eprintln!("BPF loaded successfully!");
-
     let _link = skel.progs.api_sentinel.attach()?;
     let _recv_entry_link = skel.progs.api_sentinel_recv_entry.attach()?;
     let _recv_exit_link = skel.progs.api_sentinel_recv_exit.attach()?;
-    eprintln!("kprobes attached!");
 
     let mut tc_builder = TcHookBuilder::new(skel.progs.api_sentinel_egress.as_fd());
     tc_builder.ifindex(LO_IFINDEX).replace(true).handle(1).priority(1);
@@ -146,7 +139,6 @@ fn main() -> Result<()> {
         }
     }
     egress_hook.attach()?;
-    eprintln!("TC egress program attached to lo!");
 
     let _ = std::fs::remove_file(BLOCKLIST_PIN_PATH);
     skel.maps.blocklist.pin(BLOCKLIST_PIN_PATH)?;

@@ -1,6 +1,3 @@
-# Discovery pipeline entrypoint. Reads parser.integration's stdout, feeds it into DiscoveryEngine, and writes discovery_report.json.
-
-
 from __future__ import annotations
 
 import json

@@ -1,5 +1,3 @@
-"""Throttled, atomic writer for discovery_report.json."""
-
 from __future__ import annotations
 
 import json

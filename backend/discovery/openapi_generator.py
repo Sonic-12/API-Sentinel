@@ -1,5 +1,3 @@
-# Builds an OpenAPI 3.0 document from a DiscoveryEngine's observed traffic.
-
 from __future__ import annotations
 
 from .inventory import DiscoveryEngine

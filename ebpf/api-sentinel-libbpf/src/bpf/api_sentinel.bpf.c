@@ -187,9 +187,7 @@ int BPF_KRETPROBE(api_sentinel_recv_exit, int ret)
     return 0;
 }
 
-/* TC egress on lo: actual drop path (TC_ACT_SHOT), replaces the
- * earlier bpf_probe_write_user approach which always failed (-EFAULT)
- * since msg_iter is kernel memory, not user memory. */
+
 SEC("tc")
 int api_sentinel_egress(struct __sk_buff *skb)
 {

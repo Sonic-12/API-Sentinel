@@ -71,7 +71,6 @@ def _extract_object_id(path):
 
 
 def check_enumeration(path, identity, history, parsed_request):
-    # history is a dict shared across requests: identity -> {"ids": [...], "last_seen": ts}
     import time
     now = time.time()
 

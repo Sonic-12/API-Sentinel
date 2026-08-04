@@ -1,4 +1,4 @@
-"""Path normalization and JSON schema inference."""
+
 
 from __future__ import annotations
 
@@ -22,9 +22,6 @@ def normalize_path(path: str) -> str:
 
 
 def extract_object_id(path: str) -> Optional[str]:
-    """Returns the last concrete ID segment in the path (numeric or
-    UUID), or None if the path has no ID segment. This is the object
-    identifier a BOLA check correlates against a caller's identity."""
     segments = path.strip("/").split("/")
     for seg in reversed(segments):
         if _ID_SEGMENT.match(seg):

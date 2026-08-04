@@ -9,8 +9,6 @@ from typing import Optional
 from .normalizer import normalize_path, extract_object_id
 
 MAX_ACCESS_LOG_SIZE = 500
-
-
 @dataclass
 class AccessEvent:
     identity: Optional[str]
