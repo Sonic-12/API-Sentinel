@@ -62,9 +62,7 @@ def check_sensitive_path(path, parsed_request):
 
 
 def _extract_object_id(path):
-    if not path.startswith("/users/"):
-        return None
-    segment = path.split("/")[-1]
+    segment = path.rstrip("/").split("/")[-1]
     if _ID_SEGMENT.match(segment):
         return segment
     return None

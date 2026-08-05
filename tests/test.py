@@ -1,9 +1,9 @@
 """
 0. Health check , neutral baseline, no alerts, no enforcement
-1. Normal user traffic , baseline requests, risk stays 0
+1. Normal user traffic , baseline requests
 2. User ID enumeration , sequential ID access flags enumeration
 3. BOLA (user resource) , enumeration + object-access violation on /users/{id}
-4. BOLA/rate (order resource) , same pattern on /orders/{id}; currently only rate-limit fires
+4. BOLA (order resource) , same pattern on /orders/{id}
 5. Business flow rate abuse , excessive hits to same object, rate-limited
 6. Login brute force , repeated /login attempts, rate-limited
 7. Registration abuse , repeated /register signups, rate-limited
@@ -164,7 +164,7 @@ SCENARIOS = [
         expect_alerts=["enum", "bola"], expect_enforcement=True,
     ),
     Scenario(
-        name="4. Rate abuse (BOLA attack on order resource)",
+        name="4. BOLA attack (order resource)",
         path_template=OBJECT_PATH_TEMPLATE, ids=list(range(300, 312)),
         token="Bearer Scenario4-BOLA-Order", pace=0.2,
         expect_alerts=["enum", "bola"], expect_enforcement=True,
