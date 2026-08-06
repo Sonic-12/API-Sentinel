@@ -27,8 +27,8 @@ cargo:rerun-if-env-changed=LIBBPF_SYS_EXTRA_CFLAGS
   MKDIR    /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs
   INSTALL  bpf.h libbpf.h btf.h libbpf_common.h libbpf_legacy.h bpf_helpers.h bpf_helper_defs.h bpf_tracing.h bpf_endian.h bpf_core_read.h skel_internal.h libbpf_version.h usdt.bpf.h
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/bpf.o
-  INSTALL  /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/libbpf.pc
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/btf.o
+  INSTALL  /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/libbpf.pc
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/libbpf.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/libbpf_utils.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/netlink.o
@@ -39,8 +39,8 @@ cargo:rerun-if-env-changed=LIBBPF_SYS_EXTRA_CFLAGS
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/hashmap.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/ringbuf.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/strset.o
-  CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/linker.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/gen_loader.o
+  CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/linker.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/relo_core.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/usdt.o
   CC       /home/lohit/Axlero/API-Sentinel/ebpf/api-sentinel-libbpf/target/debug/build/libbpf-sys-73e11ea1773c0c79/out/obj/staticobjs/zip.o

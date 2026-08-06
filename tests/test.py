@@ -8,6 +8,7 @@
 6. Login brute force , repeated /login attempts, rate-limited
 7. Registration abuse , repeated /register signups, rate-limited
 8. Shadow API probing , hits undocumented routes, flagged as sensitive/shadow
+9. BFLA (privilege escalation) , identity baselined on normal endpoints, then hits a privileged path
 
 Core things validated: alerting, risk scoring, enforcement/blocking, flow isolation (distinct ports), and shadow-endpoint discovery."""
 
@@ -123,6 +124,7 @@ class Scenario:
     path: Optional[str] = None
     path_template: Optional[str] = None
     ids: Optional[list] = None
+    path_sequence: Optional[list] = None
     body_seq: Optional[list] = None
     count: int = 1
     token: Optional[str] = None
@@ -134,6 +136,8 @@ class Scenario:
     def build_requests(self) -> list[tuple[str, str, Optional[dict]]]:
         if self.ids is not None:
             return [(self.method, self.path_template.format(id=i), None) for i in self.ids]
+        if self.path_sequence is not None:
+            return [(self.method, p, None) for p in self.path_sequence]
         if self.body_seq is not None:
             return [(self.method, self.path, b) for b in self.body_seq]
         return [(self.method, self.path, None)] * self.count
@@ -198,6 +202,12 @@ SCENARIOS = [
         name="8. Shadow API probing (undocumented endpoints)",
         token="Bearer Scenario8-ShadowProbe", pace=0.4,
         expect_alerts=["shadow"], expect_enforcement=None,
+    ),
+    Scenario(
+        name="9. BFLA attack (privilege escalation)",
+        path_sequence=["/users/101", "/admin/export", "/admin/export"],
+        token="Bearer Scenario9-BFLA", pace=0.3,
+        expect_alerts=["broken function level authorization"], expect_enforcement=True,
     ),
 ]
 
