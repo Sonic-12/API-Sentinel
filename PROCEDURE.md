@@ -91,12 +91,7 @@ sudo ./target/debug/api-sentinel-libbpf | \
 
 ```
 
-Expected Output
 
-```text
-Opening BPF skeleton...
-BPF loaded successfully!
-kprobes attached!
 Listening for events...
 
 decoder.py loaded
@@ -106,77 +101,4 @@ Leave this terminal running.
 
 ---
 
-# Step 3: Simulate a BOLA Attack
-
-Once both terminals are running successfully, generate authenticated API requests using either of the following methods.
-
-### Option 1: Swagger UI
-
-Open your browser and visit:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-Execute the following requests using the same Authorization token:
-
-```text
-Authorization: Bearer T1 (EXAMPLE)
-
-GET /users/101
-GET /users/102
-GET /users/103
-GET /users/104
-GET /users/105
-```
-
-### Option 2: Postman
-
-Open Postman and send the same requests to the FastAPI server.
-
-Example:
-
-```text
-GET http://127.0.0.1:8000/users/101
-GET http://127.0.0.1:8000/users/102
-GET http://127.0.0.1:8000/users/103
-GET http://127.0.0.1:8000/users/104
-GET http://127.0.0.1:8000/users/105
-```
-
-Add the following request header:
-
-```text
-Authorization: Bearer T1 (EXAMPLE)
-```
-
----
-
-# Step 4: Verify Detection Output
-
-After generating traffic, verify the following files:
-
-```text
-backend/discovery_report.json
-```
-
-and
-
-```text
-backend/alerts.log
-```
-
-These files contain the generated BOLA alerts, risk scores, and request details.
-
----
-# Stopping the Application
-
-To stop the FastAPI server and the eBPF pipeline, return to each running terminal and press:
-
-```text
-Ctrl + C
-```
-
-This will safely terminate both processes.
-
----
+uvicorn dashboard_api.main:app --port 8010 --reload

@@ -130,7 +130,7 @@ def check_function_level_authorization(path, identity, history, parsed_request):
     rec["last_seen"] = now
 
     if is_sensitive:
-        if rec["seen_normal"] and not rec["seen_sensitive"]:
+        if rec["seen_normal"]:
             parsed_request.risk_score += BFLA_RISK
             parsed_request.alerts.append(
                 f"Possible Broken Function Level Authorization: '{identity}' previously only "

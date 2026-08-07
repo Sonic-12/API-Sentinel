@@ -58,6 +58,7 @@ def parse_request(raw_request, conn_id=None, saddr=None, daddr=None, sport=None,
             pass
 
     authorization = headers.get("Authorization")
+    client_id = headers.get("X-Client-Id")
 
     parsed_request = ParsedRequest(
         method=method,
@@ -69,6 +70,7 @@ def parse_request(raw_request, conn_id=None, saddr=None, daddr=None, sport=None,
         conn_id=conn_id,
         client_ip=ip_to_str(saddr),
         server_ip=ip_to_str(daddr),
+        client_id=client_id,
         sport=sport,
         dport=dport
     )
@@ -77,12 +79,12 @@ def parse_request(raw_request, conn_id=None, saddr=None, daddr=None, sport=None,
     check_authorization(headers, path, parsed_request)
     check_sensitive_path(path, parsed_request)
 
-    identity = authorization or parsed_request.client_ip or "unknown"
+    identity = authorization or client_id or parsed_request.client_ip or "unknown"
 
     object_id = check_enumeration(path, identity, previous_object_ids, parsed_request)
     check_function_level_authorization(path, identity, function_access_history, parsed_request)
-    bola_engine.evaluate(authorization, object_id, parsed_request)
-    rate_limiter.evaluate(authorization, path, parsed_request)
+    bola_engine.evaluate(identity, object_id, parsed_request)
+    rate_limiter.evaluate(identity, path, parsed_request)
 
     print(json.dumps(to_masked_dict(parsed_request), indent=4))
 

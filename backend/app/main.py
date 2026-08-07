@@ -5,6 +5,9 @@ app = FastAPI()
 
 security = HTTPBearer()
 
+PARSER_RESET_SOCK = "/tmp/api-sentinel-parser-reset.sock"
+DISCOVERY_RESET_SOCK = "/tmp/api-sentinel-discovery-reset.sock"
+
 @app.get("/health")
 def health_check():
     return {

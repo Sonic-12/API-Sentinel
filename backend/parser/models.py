@@ -22,6 +22,7 @@ class ParsedRequest:
     conn_id: int = None
     client_ip: str = None
     server_ip: str = None
+    client_id: str = None
     sport: int = None
     dport: int = None
 

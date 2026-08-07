@@ -1,4 +1,3 @@
-
 from collections import deque, OrderedDict
 import time
 
@@ -55,17 +54,14 @@ class BolaEngine:
         self._history[token] = rec
         return rec
 
-    def evaluate(self, authorization, object_id, parsed_request):
-        """Update state for this request and, if warranted, raise a
-        BOLA alert on parsed_request. Returns the current foreign-object
-        count for this token (0 if no signal)."""
-        if object_id is None or not authorization:
+    def evaluate(self, identity, object_id, parsed_request):
+        if object_id is None or not identity:
             return 0
 
         now = self._clock()
         self._evict_stale(now)
 
-        rec = self._get_record(authorization, now)
+        rec = self._get_record(identity, now)
         rec["last_seen"] = now
 
         if rec["owner_id"] is None:

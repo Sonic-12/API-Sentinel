@@ -86,7 +86,7 @@ def mask_body(body):
     return body
 
 
-def mask_alert_text(alert: str, raw_authorization=None, client_ip=None) -> str:
+def mask_alert_text(alert: str, raw_authorization=None, client_ip=None, raw_client_id=None) -> str:
     if not isinstance(alert, str):
         return alert
     text = alert
@@ -96,11 +96,13 @@ def mask_alert_text(alert: str, raw_authorization=None, client_ip=None) -> str:
         anon_raw = f"anon:{client_ip}"
         if anon_raw in text:
             text = text.replace(anon_raw, f"anon:masked:{_hash_token(client_ip)}")
+    if raw_client_id and raw_client_id in text:
+        text = text.replace(raw_client_id, f"masked:{_hash_token(raw_client_id)}")
     return text
 
 
-def mask_alerts(alerts, raw_authorization=None, client_ip=None) -> list:
-    return [mask_alert_text(a, raw_authorization, client_ip) for a in (alerts or [])]
+def mask_alerts(alerts, raw_authorization=None, client_ip=None, raw_client_id=None) -> list:
+    return [mask_alert_text(a, raw_authorization, client_ip, raw_client_id) for a in (alerts or [])]
 
 
 def to_masked_dict(parsed_request) -> dict:
@@ -108,10 +110,13 @@ def to_masked_dict(parsed_request) -> dict:
     data = asdict(parsed_request)
     raw_authorization = (parsed_request.headers or {}).get("Authorization")
     client_ip = getattr(parsed_request, "client_ip", None)
+    raw_client_id = getattr(parsed_request, "client_id", None)
 
     data["headers"] = mask_headers(copy.deepcopy(data.get("headers")))
     data["body"] = mask_body(copy.deepcopy(data.get("body")))
     data["query_parameters"] = mask_body(copy.deepcopy(data.get("query_parameters")))
-    data["alerts"] = mask_alerts(data.get("alerts"), raw_authorization, client_ip)
+    data["alerts"] = mask_alerts(data.get("alerts"), raw_authorization, client_ip, raw_client_id)
     data["client_ip"] = mask_ip(client_ip)
+    if raw_client_id:
+        data["client_id"] = f"masked:{_hash_token(raw_client_id)}"
     return data
