@@ -43,11 +43,14 @@ Run:
 from __future__ import annotations
 
 import argparse
+import html
 import http.client
 import json
+import os
 import random
 import socket
 import time
+import webbrowser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Optional
@@ -56,6 +59,8 @@ from typing import Optional
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
 CONNECT_TIMEOUT = 5
+
+REPORT_FILENAME = "test_report.html"
 
 HEALTH_PATH = "/health"
 LOGIN_PATH = "/login"
@@ -665,6 +670,214 @@ def print_summary(results: list[ScenarioResult], stress_results: list[StressResu
         print(f"\nWARNING: source ports not all distinct ({ports}). Isolation not guaranteed.")
 
 
+# ---------------------------------------------------------------------------
+# HTML report
+#
+# Purely additive: reads the same ScenarioResult / StressResult objects the
+# terminal summary already prints, and renders them as a single self-contained
+# HTML file (no external assets, works via plain file:// open). Terminal
+# output above is untouched -- this is a second view onto the same data, not
+# a replacement.
+#
+# Uses a FIXED filename (REPORT_FILENAME), so it always overwrites on a new
+# invocation of test.py. But within one invocation, `--repeat N` collects
+# every run into the SAME file as separate labeled sections, so repeated runs
+# inside a single command never clobber each other -- only a brand new
+# `python3 test.py` call replaces the file.
+# ---------------------------------------------------------------------------
+
+_STATUS_COLORS = {
+    "PASS": ("#16a34a", "#dcfce7"),
+    "FAIL": ("#dc2626", "#fee2e2"),
+    "GAP (expected)": ("#d97706", "#fef3c7"),
+}
+
+
+def _scenario_label(result: ScenarioResult) -> tuple[str, bool]:
+    ok, _ = evaluate(result)
+    is_evasion = "EVASION" in result.name
+    label = "GAP (expected)" if (is_evasion and not ok) else ("PASS" if ok else "FAIL")
+    return label, (ok or is_evasion)
+
+
+def _render_scenario_card(result: ScenarioResult) -> str:
+    label, _ = _scenario_label(result)
+    fg, bg = _STATUS_COLORS.get(label, ("#374151", "#e5e7eb"))
+    _, reasons = evaluate(result)
+    alerts = ", ".join(sorted(result.alerts)) if result.alerts else "(none / no header)"
+    max_risk = result.max_risk if result.max_risk is not None else "(no header)"
+
+    reasons_html = "".join(f"<li>{html.escape(r)}</li>" for r in reasons)
+    note_html = (
+        f'<div class="note"><strong>Note:</strong> {html.escape(result.note)}</div>'
+        if result.note else ""
+    )
+
+    return f"""
+    <div class="card">
+      <div class="card-head">
+        <span class="badge" style="color:{fg};background:{bg};">{html.escape(label)}</span>
+        <span class="card-title">{html.escape(result.name)}</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-row">
+          <div class="stat"><span class="stat-label">Local port</span><span class="stat-val">{result.local_port}</span></div>
+          <div class="stat"><span class="stat-label">Max risk</span><span class="stat-val">{html.escape(str(max_risk))}</span></div>
+          <div class="stat"><span class="stat-label">Deny count</span><span class="stat-val">{result.deny_count}/{result.total_requests}</span></div>
+        </div>
+        <div class="stat"><span class="stat-label">Alerts observed</span><span class="stat-val">{html.escape(alerts)}</span></div>
+        <ul class="reasons">{reasons_html}</ul>
+        {note_html}
+      </div>
+    </div>"""
+
+
+def _render_stress_card(sr: StressResult) -> str:
+    distinct_ports = len(set(sr.ports_seen))
+    warn = (
+        '<div class="note warn"><strong>Warning:</strong> client-side errors during '
+        "concurrent run -- check for crashes/races on the server side too.</div>"
+        if sr.errors > 0 else ""
+    )
+    return f"""
+    <div class="card">
+      <div class="card-head">
+        <span class="badge" style="color:#374151;background:#e5e7eb;">STRESS</span>
+        <span class="card-title">{html.escape(sr.name)}</span>
+      </div>
+      <div class="card-body">
+        <div class="stat-row">
+          <div class="stat"><span class="stat-label">Workers</span><span class="stat-val">{sr.worker_count}</span></div>
+          <div class="stat"><span class="stat-label">Total requests</span><span class="stat-val">{sr.total_requests}</span></div>
+          <div class="stat"><span class="stat-label">Denied</span><span class="stat-val">{sr.deny_count}</span></div>
+          <div class="stat"><span class="stat-label">Client errors</span><span class="stat-val">{sr.errors}</span></div>
+          <div class="stat"><span class="stat-label">Elapsed</span><span class="stat-val">{sr.elapsed_s:.2f}s</span></div>
+          <div class="stat"><span class="stat-label">Flow isolation</span><span class="stat-val">{distinct_ports}/{len(sr.ports_seen)}</span></div>
+        </div>
+        {warn}
+      </div>
+    </div>"""
+
+
+def _render_run_section(run_idx: int, run_tag: str, results: list[ScenarioResult],
+                         stress_results: list[StressResult]) -> str:
+    all_pass = True
+    gap_count = 0
+    for result in results:
+        _, ok_or_evasion = _scenario_label(result)
+        all_pass = all_pass and ok_or_evasion
+        label, ok = _scenario_label(result)
+        if label == "GAP (expected)":
+            gap_count += 1
+
+    overall_fg, overall_bg = ("#16a34a", "#dcfce7") if all_pass else ("#dc2626", "#fee2e2")
+    overall_text = "PASS" if all_pass else "FAIL"
+
+    scenario_cards = "".join(_render_scenario_card(r) for r in results)
+    stress_cards = "".join(_render_stress_card(s) for s in stress_results)
+    stress_section = (
+        f'<h3 class="section-heading">Concurrency / Stress</h3><div class="grid">{stress_cards}</div>'
+        if stress_results else ""
+    )
+
+    return f"""
+  <section class="run">
+    <div class="run-head">
+      <h2>Run {run_idx} <span class="run-tag">tag={html.escape(run_tag)}</span></h2>
+      <span class="overall-badge" style="color:{overall_fg};background:{overall_bg};">
+        OVERALL: {overall_text} &middot; evasion gaps found: {gap_count}
+      </span>
+    </div>
+    <h3 class="section-heading">Sequential Scenarios</h3>
+    <div class="grid">{scenario_cards}</div>
+    {stress_section}
+  </section>"""
+
+
+def generate_html_report(runs: list[tuple[int, str, list, list]], output_path: str) -> None:
+    """runs: list of (run_idx, run_tag, results, stress_results)."""
+    generated_at = time.strftime("%Y-%m-%d %H:%M:%S")
+    sections = "".join(
+        _render_run_section(run_idx, run_tag, results, stress_results)
+        for run_idx, run_tag, results, stress_results in runs
+    )
+
+    doc = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>API-Sentinel Test Report</title>
+<style>
+  :root {{ color-scheme: light; }}
+  * {{ box-sizing: border-box; }}
+  body {{
+    margin: 0; padding: 24px 32px 64px;
+    background: #f5f6f8; color: #111827;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }}
+  header.page-head {{ margin-bottom: 24px; }}
+  header.page-head h1 {{ margin: 0 0 4px; font-size: 22px; }}
+  header.page-head p {{ margin: 0; color: #6b7280; font-size: 13px; }}
+  .run {{ margin-bottom: 40px; }}
+  .run-head {{
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 16px;
+  }}
+  .run-head h2 {{ margin: 0; font-size: 18px; }}
+  .run-tag {{ font-weight: 400; font-size: 12px; color: #6b7280; margin-left: 8px; }}
+  .overall-badge {{
+    font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px;
+  }}
+  .section-heading {{
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: #6b7280; margin: 18px 0 10px;
+  }}
+  .grid {{
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }}
+  .card {{
+    background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px;
+    overflow: hidden;
+  }}
+  .card-head {{
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-bottom: 1px solid #f0f1f3;
+  }}
+  .badge {{
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+    white-space: nowrap;
+  }}
+  .card-title {{ font-size: 13px; font-weight: 600; }}
+  .card-body {{ padding: 12px 14px; }}
+  .stat-row {{ display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }}
+  .stat {{ display: flex; flex-direction: column; margin-bottom: 8px; }}
+  .stat-label {{ font-size: 10px; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.03em; }}
+  .stat-val {{ font-size: 13px; font-weight: 600; word-break: break-word; }}
+  ul.reasons {{ margin: 6px 0 0; padding-left: 18px; font-size: 12px; color: #374151; }}
+  ul.reasons li {{ margin-bottom: 2px; }}
+  .note {{
+    margin-top: 10px; padding: 8px 10px; border-radius: 6px;
+    background: #f3f4f6; border-left: 3px solid #9ca3af;
+    font-size: 12px; color: #4b5563; line-height: 1.4;
+  }}
+  .note.warn {{ background: #fef3c7; border-left-color: #d97706; color: #78350f; }}
+</style>
+</head>
+<body>
+  <header class="page-head">
+    <h1>API-Sentinel Test Report</h1>
+    <p>Generated {generated_at}</p>
+  </header>
+  {sections}
+</body>
+</html>"""
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(doc)
+
+
 def main():
     parser = argparse.ArgumentParser(description="API-Sentinel test harness -- core + evasion + stress")
     parser.add_argument("--host", default=DEFAULT_HOST)
@@ -673,7 +886,11 @@ def main():
     parser.add_argument("--skip-stress", action="store_true", help="skip the concurrency/stress section")
     parser.add_argument("--stress-workers", type=int, default=6, help="parallel attackers/bots for stress scenarios")
     parser.add_argument("--repeat", type=int, default=1, help="run the whole suite N times back-to-back")
+    parser.add_argument("--no-html-report", action="store_true", help="skip writing test_report.html")
+    parser.add_argument("--no-open-report", action="store_true", help="write the report but don't auto-open it in a browser")
     args = parser.parse_args()
+
+    html_runs = []  # (run_idx, run_tag, results, stress_results) -- collected across --repeat
 
     for run_idx in range(1, args.repeat + 1):
         global RUN_TAG
@@ -687,6 +904,22 @@ def main():
         stress_results = [] if args.skip_stress else run_stress(args.host, args.port, args.stress_workers)
 
         print_summary(results, stress_results)
+        html_runs.append((run_idx, RUN_TAG, results, stress_results))
+
+    if not args.no_html_report:
+        report_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), REPORT_FILENAME)
+        generate_html_report(html_runs, report_path)
+        print(f"\nHTML report written -> {report_path}")
+        print(f"(fixed filename -- overwritten on the next `python3 test.py` invocation; "
+              f"all {len(html_runs)} run(s) from this invocation are in this one file)")
+        if not args.no_open_report:
+            try:
+                webbrowser.open(f"file://{report_path}")
+                print("Opened report in your default browser.")
+            except Exception as exc:
+                print(f"(Could not auto-open browser: {exc}. Open the file above manually "
+                      f"by double-clicking it in your file explorer -- NOT inside VS Code, "
+                      f"which only shows raw HTML text.)")
 
 
 if __name__ == "__main__":

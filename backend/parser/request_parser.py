@@ -1,4 +1,5 @@
 import json
+import threading
 from parser.models import ParsedRequest, ip_to_str
 from parser.loger import log_request
 from parser.enforcer import block_flow
@@ -14,7 +15,9 @@ from parser.bola_engine import BolaEngine
 from parser.rate_limiter import RateLimiter
 
 previous_object_ids = {}
+previous_object_ids_lock = threading.Lock()
 function_access_history = {}
+function_access_history_lock = threading.Lock()
 bola_engine = BolaEngine()
 rate_limiter = RateLimiter()
 
@@ -81,8 +84,8 @@ def parse_request(raw_request, conn_id=None, saddr=None, daddr=None, sport=None,
 
     identity = authorization or client_id or parsed_request.client_ip or "unknown"
 
-    object_id = check_enumeration(path, identity, previous_object_ids, parsed_request)
-    check_function_level_authorization(path, identity, function_access_history, parsed_request)
+    object_id = check_enumeration(path, identity, previous_object_ids, parsed_request, lock=previous_object_ids_lock)
+    check_function_level_authorization(path, identity, function_access_history, parsed_request, lock=function_access_history_lock)
     bola_engine.evaluate(identity, object_id, parsed_request)
     rate_limiter.evaluate(identity, path, parsed_request)
 

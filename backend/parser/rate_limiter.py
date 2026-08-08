@@ -1,5 +1,6 @@
 from collections import deque, OrderedDict
 import re
+import threading
 import time
 
 RATE_RISK_BASE = 40
@@ -28,6 +29,7 @@ class RateLimiter:
         self.max_identities = max_identities
         self._clock = clock
         self._history = OrderedDict()
+        self._lock = threading.Lock()
 
     def _evict_stale(self, now):
         stale_identities = []
@@ -58,16 +60,18 @@ class RateLimiter:
         flow = _path_template(path)
         now = self._clock()
 
-        self._evict_stale(now)
-        rec = self._get_flow_record(key, flow, now)
-        rec["last_seen"] = now
+        with self._lock:
+            self._evict_stale(now)
+            rec = self._get_flow_record(key, flow, now)
+            rec["last_seen"] = now
 
-        ts = rec["timestamps"]
-        ts.append(now)
-        while ts and now - ts[0] > self.window_seconds:
-            ts.popleft()
+            ts = rec["timestamps"]
+            ts.append(now)
+            while ts and now - ts[0] > self.window_seconds:
+                ts.popleft()
 
-        count = len(ts)
+            count = len(ts)
+
         if count > self.max_requests:
             risk = min(RATE_RISK_BASE + RATE_RISK_STEP * (count - self.max_requests), RATE_RISK_MAX)
             parsed_request.risk_score += risk
@@ -78,4 +82,5 @@ class RateLimiter:
         return count
 
     def reset(self):
-        self._history.clear()
+        with self._lock:
+            self._history.clear()

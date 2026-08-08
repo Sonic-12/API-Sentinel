@@ -72,31 +72,34 @@ def _extract_object_id(path):
     return None
 
 
-def check_enumeration(path, identity, history, parsed_request):
+def check_enumeration(path, identity, history, parsed_request, lock=None):
     import time
+    from contextlib import nullcontext
     now = time.time()
 
-    stale = [k for k, rec in history.items() if now - rec["last_seen"] > ENUMERATION_TTL_SECONDS]
-    for k in stale:
-        del history[k]
+    with (lock or nullcontext()):
+        stale = [k for k, rec in history.items() if now - rec["last_seen"] > ENUMERATION_TTL_SECONDS]
+        for k in stale:
+            del history[k]
 
-    object_id = _extract_object_id(path)
+        object_id = _extract_object_id(path)
 
-    if identity not in history:
-        if len(history) >= ENUMERATION_MAX_IDENTITIES:
-            oldest = min(history, key=lambda k: history[k]["last_seen"])
-            del history[oldest]
-        history[identity] = {"ids": [], "last_seen": now}
+        if identity not in history:
+            if len(history) >= ENUMERATION_MAX_IDENTITIES:
+                oldest = min(history, key=lambda k: history[k]["last_seen"])
+                del history[oldest]
+            history[identity] = {"ids": [], "last_seen": now}
 
-    rec = history[identity]
-    rec["last_seen"] = now
+        rec = history[identity]
+        rec["last_seen"] = now
 
-    if object_id is not None:
-        rec["ids"].append(object_id)
-        if len(rec["ids"]) > ENUMERATION_WINDOW:
-            rec["ids"] = rec["ids"][-ENUMERATION_WINDOW:]
+        if object_id is not None:
+            rec["ids"].append(object_id)
+            if len(rec["ids"]) > ENUMERATION_WINDOW:
+                rec["ids"] = rec["ids"][-ENUMERATION_WINDOW:]
 
-    ids = rec["ids"]
+        ids = list(rec["ids"])
+
     if len(ids) >= 3:
         last_three = ids[-3:]
         if all(x.isdigit() for x in last_three):
@@ -110,32 +113,37 @@ def check_enumeration(path, identity, history, parsed_request):
     return object_id
 
 
-def check_function_level_authorization(path, identity, history, parsed_request):
+def check_function_level_authorization(path, identity, history, parsed_request, lock=None):
     import time
+    from contextlib import nullcontext
     now = time.time()
 
-    stale = [k for k, rec in history.items() if now - rec["last_seen"] > ENUMERATION_TTL_SECONDS]
-    for k in stale:
-        del history[k]
+    with (lock or nullcontext()):
+        stale = [k for k, rec in history.items() if now - rec["last_seen"] > ENUMERATION_TTL_SECONDS]
+        for k in stale:
+            del history[k]
 
-    is_sensitive = any(path.startswith(p) for p in FUNCTION_SENSITIVE_PATHS)
+        is_sensitive = any(path.startswith(p) for p in FUNCTION_SENSITIVE_PATHS)
 
-    if identity not in history:
-        if len(history) >= ENUMERATION_MAX_IDENTITIES:
-            oldest = min(history, key=lambda k: history[k]["last_seen"])
-            del history[oldest]
-        history[identity] = {"seen_normal": False, "seen_sensitive": False, "last_seen": now}
+        if identity not in history:
+            if len(history) >= ENUMERATION_MAX_IDENTITIES:
+                oldest = min(history, key=lambda k: history[k]["last_seen"])
+                del history[oldest]
+            history[identity] = {"seen_normal": False, "seen_sensitive": False, "last_seen": now}
 
-    rec = history[identity]
-    rec["last_seen"] = now
+        rec = history[identity]
+        rec["last_seen"] = now
+        was_seen_normal = rec["seen_normal"]
+
+        if is_sensitive:
+            rec["seen_sensitive"] = True
+        else:
+            rec["seen_normal"] = True
 
     if is_sensitive:
-        if rec["seen_normal"]:
+        if was_seen_normal:
             parsed_request.risk_score += BFLA_RISK
             parsed_request.alerts.append(
                 f"Possible Broken Function Level Authorization: '{identity}' previously only "
                 f"accessed standard endpoints, now accessing privileged path '{path}'"
             )
-        rec["seen_sensitive"] = True
-    else:
-        rec["seen_normal"] = True

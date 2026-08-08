@@ -91,14 +91,15 @@ sudo ./target/debug/api-sentinel-libbpf | \
 
 ```
 
-
+Control socket listening at /tmp/api-sentinel.sock
 Listening for events...
-
-decoder.py loaded
 ```
 
 Leave this terminal running.
 
 ---
 
-uvicorn dashboard_api.main:app --port 8010 --reload
+step 3 in other terminal cd backend uvicorn  source .venv/bin/activate then dashboard_api.main:app --port 8010 --reload 
+
+
+step 4 in other terminal cd frontend npm ren dev .... 
