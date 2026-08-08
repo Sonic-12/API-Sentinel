@@ -109,14 +109,10 @@ pipeline active. Target: under 5 ms added latency per request.
 
 All endpoints stayed under the 5 ms overhead target under the workload.
 
-## Getting Started
+## Project Structure
 
 Full setup, including prerequisites, dependency installation, and the exact run sequence across all
 four services, is documented in **[PROCEDURE.md](PROCEDURE.md)**.
-
-A GIF walkthrough demonstrating the full project end-to-end will be added here.
-
-## Project Structure
 
 ```
 API-Sentinel/
@@ -135,6 +131,7 @@ API-Sentinel/
 - [`Documentation/(3) Discovery Pipeline.md`](<Documentation/(3) Discovery Pipeline.md>): shadow API discovery
 
 ## License
-
-Developed as part of the **Axlero Internship Program**, for educational and research purposes. Not
-currently licensed for external redistribution.
+![License](https://img.shields.io/badge/License-Proprietary-red)
+ 
+This project is **proprietary** and not open source. It was developed as part of the
+**Axlero Solutions Internship Program**. All rights are reserved.
