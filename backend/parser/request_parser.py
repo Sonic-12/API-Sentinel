@@ -1,39 +1,40 @@
 import json
-from dataclasses import asdict
-from os import path
-from wsgiref import headers
-from parser.sample_data import RAW_HTTP_REQUESTS
-from parser.models import ParsedRequest
+import threading
+from parser.models import ParsedRequest, ip_to_str
 from parser.loger import log_request
-from parser.validators import(
+from parser.enforcer import block_flow
+from parser.masking import to_masked_dict
+from parser.validators import (
     check_http_method,
     check_authorization,
     check_sensitive_path,
-    check_enumeration
+    check_enumeration,
+    check_function_level_authorization
 )
 from parser.bola_engine import BolaEngine
-previous_object_id = []
+from parser.rate_limiter import RateLimiter
+
+previous_object_ids = {}
+previous_object_ids_lock = threading.Lock()
+function_access_history = {}
+function_access_history_lock = threading.Lock()
 bola_engine = BolaEngine()
-def parse_request(raw_request):
+rate_limiter = RateLimiter()
+
+
+def parse_request(raw_request, conn_id=None, saddr=None, daddr=None, sport=None, dport=None):
     lines = raw_request.strip().splitlines()
     body = ""
     requested_line = lines[0]
-    parts=requested_line.split()
+    parts = requested_line.split()
 
     if len(parts) != 3:
         print("Malformed HTTP Request")
         return
 
     method = parts[0]
-    valid_methods = [
-    "GET",
-    "POST",
-    "PUT",
-    "DELETE",
-    "PATCH",
-    "HEAD",
-    "OPTIONS"
-   ]
+    valid_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+
     path = parts[1]
     query_parameters = {}
     if "?" in path:
@@ -45,47 +46,53 @@ def parse_request(raw_request):
 
     headers = {}
     for line in lines[1:]:
+        if line == "":
+            break
         if ": " in line:
             key, value = line.split(": ", 1)
             headers[key] = value
+
     if "" in lines:
         body_start = lines.index("") + 1
         body = "\n".join(lines[body_start:])
-
         try:
             body = json.loads(body)
         except json.JSONDecodeError:
             pass
+
     authorization = headers.get("Authorization")
+    client_id = headers.get("X-Client-Id")
 
     parsed_request = ParsedRequest(
-    method=method,
-    path=path,
-    query_parameters=query_parameters,
-    http_version=http_version,
-    headers=headers,
-    body=body
-)
-    
+        method=method,
+        path=path,
+        query_parameters=query_parameters,
+        http_version=http_version,
+        headers=headers,
+        body=body,
+        conn_id=conn_id,
+        client_ip=ip_to_str(saddr),
+        server_ip=ip_to_str(daddr),
+        client_id=client_id,
+        sport=sport,
+        dport=dport
+    )
+
     check_http_method(method, parsed_request, valid_methods)
     check_authorization(headers, path, parsed_request)
     check_sensitive_path(path, parsed_request)
 
-    object_id = check_enumeration(
-    path,
-    previous_object_id,
-    parsed_request
-    )
-    bola_engine.evaluate(
-    authorization,
-    object_id,
-    parsed_request
-    )
- 
-    print(json.dumps(asdict(parsed_request), indent=4))
+    identity = authorization or client_id or parsed_request.client_ip or "unknown"
+
+    object_id = check_enumeration(path, identity, previous_object_ids, parsed_request, lock=previous_object_ids_lock)
+    check_function_level_authorization(path, identity, function_access_history, parsed_request, lock=function_access_history_lock)
+    bola_engine.evaluate(identity, object_id, parsed_request)
+    rate_limiter.evaluate(identity, path, parsed_request)
+
+    print(json.dumps(to_masked_dict(parsed_request), indent=4))
+
     if parsed_request.risk_score > 0:
         log_request(parsed_request)
 
-if __name__ == "__main__":
-    for request in RAW_HTTP_REQUESTS:
-        parse_request(request)
+    if parsed_request.risk_score >= 60:
+        block_flow(saddr, daddr, sport, dport)

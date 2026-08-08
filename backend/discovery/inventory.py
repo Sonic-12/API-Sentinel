@@ -1,5 +1,3 @@
-"""EndpointRecord and DiscoveryEngine -- the live registry of observed endpoints."""
-
 from __future__ import annotations
 
 import time

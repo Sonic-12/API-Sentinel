@@ -1,5 +1,3 @@
-# Diffs observed traffic against the official /openapi.json spec.
-
 from __future__ import annotations
 
 from .inventory import DiscoveryEngine

@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import time
@@ -7,10 +6,9 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from .normalizer import normalize_path, extract_object_id
+from parser.masking import mask_authorization, mask_alerts
 
 MAX_ACCESS_LOG_SIZE = 500
-
-
 @dataclass
 class AccessEvent:
     identity: Optional[str]
@@ -45,14 +43,19 @@ class AccessLog:
 
         headers = request.get("headers") or {}
 
+        raw_authorization = headers.get("Authorization")
         event = AccessEvent(
-            identity=headers.get("Authorization"),
+            identity=mask_authorization(raw_authorization),
             method=method,
             path_template=normalize_path(path),
             object_id=extract_object_id(path),
             timestamp=time.time(),
             risk_score=request.get("risk_score", 0),
-            alerts=list(request.get("alerts", []) or []),
+            alerts=mask_alerts(
+                request.get("alerts", []),
+                raw_authorization,
+                request.get("client_ip"),
+            ),
         )
         self.events.append(event)
 

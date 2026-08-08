@@ -1,5 +1,5 @@
-
 from collections import deque, OrderedDict
+import threading
 import time
 
 BOLA_RISK_BASE = 60
@@ -26,8 +26,9 @@ class BolaEngine:
         self.ttl_seconds = ttl_seconds
         self.max_tokens = max_tokens
         self._clock = clock
-        # token -> {"owner_id": obj, "seen": set(), "recent": deque, "last_seen": ts}
+        # token as {"owner_id": obj, "seen": set(), "recent": deque, "last_seen": ts}
         self._history = OrderedDict()
+        self._lock = threading.Lock()
 
     def _evict_stale(self, now):
         stale = [
@@ -55,27 +56,26 @@ class BolaEngine:
         self._history[token] = rec
         return rec
 
-    def evaluate(self, authorization, object_id, parsed_request):
-        """Update state for this request and, if warranted, raise a
-        BOLA alert on parsed_request. Returns the current foreign-object
-        count for this token (0 if no signal)."""
-        if object_id is None or not authorization:
+    def evaluate(self, identity, object_id, parsed_request):
+        if object_id is None or not identity:
             return 0
 
-        now = self._clock()
-        self._evict_stale(now)
+        with self._lock:
+            now = self._clock()
+            self._evict_stale(now)
 
-        rec = self._get_record(authorization, now)
-        rec["last_seen"] = now
+            rec = self._get_record(identity, now)
+            rec["last_seen"] = now
 
-        if rec["owner_id"] is None:
-            rec["owner_id"] = object_id  # baseline: first object == "self"
+            if rec["owner_id"] is None:
+                rec["owner_id"] = object_id  # baseline: first object == "self"
 
-        rec["recent"].append(object_id)
-        rec["seen"].add(object_id)
+            rec["recent"].append(object_id)
+            rec["seen"].add(object_id)
 
-        foreign_ids = rec["seen"] - {rec["owner_id"]}
-        foreign_count = len(foreign_ids)
+            foreign_ids = rec["seen"] - {rec["owner_id"]}
+            foreign_count = len(foreign_ids)
+            owner_id = rec["owner_id"]
 
         if foreign_count >= self.unique_threshold:
             risk = min(
@@ -85,11 +85,12 @@ class BolaEngine:
             parsed_request.risk_score += risk
             parsed_request.alerts.append(
                 f"Possible BOLA Attack: token baselined to object "
-                f"'{rec['owner_id']}' also accessed {foreign_count} other "
+                f"'{owner_id}' also accessed {foreign_count} other "
                 f"object IDs ({sorted(foreign_ids, key=str)[:5]})"
             )
 
         return foreign_count
 
     def reset(self):
-        self._history.clear()
+        with self._lock:
+            self._history.clear()

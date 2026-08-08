@@ -1,4 +1,12 @@
 from dataclasses import dataclass, field
+import socket
+import struct
+
+
+def ip_to_str(addr):
+    if addr is None:
+        return None
+    return socket.inet_ntoa(struct.pack("!I", addr))
 
 
 @dataclass
@@ -11,7 +19,12 @@ class ParsedRequest:
     headers: dict
     body: dict | str
 
-    risk_score: int = 0
+    conn_id: int = None
+    client_ip: str = None
+    server_ip: str = None
+    client_id: str = None
+    sport: int = None
+    dport: int = None
 
+    risk_score: int = 0
     alerts: list = field(default_factory=list)
-    
