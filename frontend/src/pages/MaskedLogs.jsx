@@ -60,9 +60,9 @@ export default function MaskedLogs() {
     <div className="stack">
       <div className="page-header" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
         <div>
-          <p className="page-eyebrow">masking.py</p>
+          <p className="page-eyebrow">masking</p>
           <h1 className="page-title">Masked Logs</h1>
-          <p className="page-sub">Credentials and PII are hashed or partially redacted before they ever reach this dashboard.</p>
+          <p className="page-sub">Redacted logs for privacy and compliance.</p>
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           <button className="export-btn" onClick={() => exportData("csv")} disabled={!logs?.length}>

@@ -26,7 +26,7 @@ export default function Analytics() {
       <div className="page-header">
         <p className="page-eyebrow">Behavioral Authorization AI</p>
         <h1 className="page-title">Analytics</h1>
-        <p className="page-sub">Every category here comes from classifying the alert strings the engine actually raised.</p>
+        <p className="page-sub">Attack frequency and pattern breakdown</p>
       </div>
 
       <div className="panel">

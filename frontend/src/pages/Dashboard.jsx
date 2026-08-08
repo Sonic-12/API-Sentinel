@@ -25,7 +25,7 @@ export default function Dashboard() {
         <p className="page-eyebrow">Overview</p>
         <h1 className="page-title">Dashboard</h1>
         <p className="page-sub">
-          Live posture computed from the analytics engine's own discovery report — nothing here is hardcoded.
+          System's security posture and activity.
         </p>
       </div>
 

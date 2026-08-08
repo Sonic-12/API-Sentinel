@@ -25,7 +25,7 @@ export default function Discovery() {
       <div className="page-header">
         <p className="page-eyebrow">Shadow API Discovery Engine</p>
         <h1 className="page-title">Discovery</h1>
-        <p className="page-sub">Straight from discovery_report.json — traffic compared against the official OpenAPI contract.</p>
+        <p className="page-sub">Live API discovery and analysis</p>
       </div>
 
       <div className="grid grid-stats">

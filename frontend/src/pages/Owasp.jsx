@@ -13,8 +13,7 @@ export default function Owasp() {
         <p className="page-eyebrow">OWASP API Security Top 10</p>
         <h1 className="page-title">Coverage</h1>
         <p className="page-sub">
-          Only categories the engine has actually raised an alert for, from live traffic, appear here —
-          nothing is asserted, only observed.
+          Live coverage of the OWASP API Security Top 10 categories, based on observed traffic and the official OpenAPI contract.
         </p>
       </div>
 

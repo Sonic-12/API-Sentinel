@@ -13,7 +13,7 @@ export default function Settings() {
       <div className="page-header">
         <p className="page-eyebrow">Configuration</p>
         <h1 className="page-title">Settings</h1>
-        <p className="page-sub">Read-only for now — these are the live values baked into the current engine build.</p>
+        <p className="page-sub">Current engine thresholds.(Read-only)</p>
       </div>
 
       <div className="panel">

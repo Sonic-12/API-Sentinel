@@ -96,7 +96,7 @@ export default function Alerts() {
       <div className="page-header">
         <p className="page-eyebrow">Live Feed</p>
         <h1 className="page-title">Alerts</h1>
-        <p className="page-sub">Every flagged request from the last 500 processed, newest first.</p>
+        <p className="page-sub">Real-time alerts and notifications</p>
       </div>
 
       <div className="panel">
