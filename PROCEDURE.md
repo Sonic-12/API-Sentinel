@@ -49,15 +49,6 @@ clang --version
 
 ---
 
-## 3. Install Frontend Dependencies
-
-```bash
-cd frontend
-npm install
-```
-
----
-
 ## Running the Stack
 
 Four services run together, each in its own terminal, in this order.
